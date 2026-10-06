@@ -1,0 +1,20 @@
+# Run sdcard-check@<dev>.service when an SD card or USB disk appears.
+# Whole disks only (DEVTYPE=="disk"); partitions never match.
+
+# USB card readers keep their sdX node with no card inserted. Mark an empty
+# slot "not ready" so systemd treats card insertion (a change event that
+# gives the disk a size) as the device appearing, and SYSTEMD_WANTS fires.
+SUBSYSTEM=="block", ACTION=="add|change", ENV{DEVTYPE}=="disk", ENV{ID_BUS}=="usb", ATTR{size}=="0", ENV{SYSTEMD_READY}="0"
+
+# Native SD/MMC slot: mmcblkN appears when the card is inserted.
+SUBSYSTEM=="block", ACTION=="add|change", ENV{DEVTYPE}=="disk", KERNEL=="mmcblk[0-9]", ENV{SYSTEMD_WANTS}+="sdcard-check@%k.service sdcard-track@%k.service"
+
+# USB sticks, USB SSDs, and cards in USB readers.
+SUBSYSTEM=="block", ACTION=="add|change", ENV{DEVTYPE}=="disk", ENV{ID_BUS}=="usb", ATTR{size}!="0", ENV{SYSTEMD_WANTS}+="sdcard-check@%k.service sdcard-track@%k.service"
+
+# Hold the desktop automount (udisks) until the check has run, so it checks
+# an unmounted card that nothing has written to yet. sdcard-check mounts the
+# card for the logged-in user when it finishes. Delete these two lines to
+# restore normal automounting.
+SUBSYSTEM=="block", ACTION=="add|change", KERNEL=="mmcblk[0-9]*", ENV{UDISKS_AUTO}="0"
+SUBSYSTEM=="block", ACTION=="add|change", ENV{ID_BUS}=="usb", ENV{UDISKS_AUTO}="0"

@@ -1,0 +1,31 @@
+[Unit]
+Description=SD/USB storage health check for /dev/%I
+Documentation=file:/usr/local/share/doc/sdcard-check/README.md
+# Stop the check if the card is pulled out.
+BindsTo=dev-%i.device
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/sdcard-check
+# Skip (not fail) for the system disk or an empty reader slot.
+# Also skips while "sdcard-check.sh --watch" handles cards in a terminal.
+ExecCondition=/usr/local/bin/sdcard-check.sh --check-eligible --udev %I
+ExecStart=/usr/local/bin/sdcard-check.sh --udev %I
+# Exit 1 (SUSPICIOUS) and 2 (FAULTY) are verdicts, not unit failures;
+# only 3 (script error / refusal) marks the unit failed.
+SuccessExitStatus=1 2
+Nice=10
+IOSchedulingClass=idle
+CPUSchedulingPolicy=batch
+# btrfs check on a large card is slow.
+TimeoutStartSec=6h
+LogsDirectory=sdcard-check
+StateDirectory=sdcard-check
+# Flasher station: per-reader state for the operator screen (--status).
+RuntimeDirectory=sdcard-flasher
+RuntimeDirectoryPreserve=yes
+RuntimeDirectoryMode=0755
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only

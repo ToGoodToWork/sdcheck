@@ -1,0 +1,18 @@
+# sdcard-check flasher station configuration (/etc/sdcard-flasher.conf).
+# The flasher is OFF while FLASHER_IMAGE is empty: cards are only checked.
+
+# Image to flash, and its block map. Create the map once:
+#   bmaptool create disk.img --output disk.bmap
+#   zstd disk.img                      (gives disk.img.zst)
+FLASHER_IMAGE=""
+FLASHER_BMAP=""
+
+# 1 = also flash cards whose check result is WARNING (SUSPICIOUS).
+FLASH_ON_WARNING=0
+# 1 = after flashing, read the card back and compare with the bmap checksums.
+FLASHER_VERIFY=1
+# 1 = do everything except writing (for trying the station out).
+FLASHER_DRYRUN=0
+
+# Numbered readers. Do not edit by hand: put a card ONLY in reader N and run
+#   sudo sdcard-check.sh --learn N

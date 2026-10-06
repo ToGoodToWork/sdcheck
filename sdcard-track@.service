@@ -1,0 +1,17 @@
+[Unit]
+Description=Record filesystem generations written to /dev/%I (lost-write detection)
+Documentation=file:/usr/local/share/doc/sdcard-check/README.md
+BindsTo=dev-%i.device
+# Start only after the insertion check has compared against the old record.
+After=dev-%i.device sdcard-check@%i.service
+
+[Service]
+Type=simple
+ExecCondition=/usr/local/bin/sdcard-check.sh --check-eligible %I
+ExecStart=/usr/local/bin/sdcard-check.sh --track %I
+StateDirectory=sdcard-check
+Nice=19
+IOSchedulingClass=idle
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
